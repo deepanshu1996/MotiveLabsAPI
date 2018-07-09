@@ -1,4 +1,4 @@
-package pennybank.tset;
+package hello;
 
 import com.google.gson.Gson;
 import com.squareup.okhttp.*;
@@ -7,9 +7,9 @@ import java.io.IOException;
 
 class AccountsApis {
 
-    private final String REDIRECT_URI = "http%3A%2F%2Flocalhost%3A8080";
-    private final String CLIENT_ID = "tTKoOUTwq5WOUQBhoheayGbwtkR7uEHA";
-    private final String CLIENT_SECRET = "HSzRmYCVmjuOv1VKGaDuoQOuBmX7j53t";
+    private final String REDIRECT_URI = "http%3A%2F%2Flocalhost%3A8080%2Fauthorize";
+    private final String CLIENT_ID = "OhaxaWe6XWkpF9774Y4wM1X5LkdBPdJl";
+    private final String CLIENT_SECRET = "kwCN6IxBoeG0N8A2xphsRqNqg6CwOVwv";
     private final String BASE_URL = "https://api.pennybank.motivelabs.io/cma9-account-api/open-banking/v1.1";
     private final String CONSENT_URL = "https://api.pennybank.motivelabs.io/consent/v1.0/cma9-account";
 
@@ -98,7 +98,7 @@ class AccountsApis {
         AccessTokenResultJson resultJson = gson.fromJson(result, AccessTokenResultJson.class);
         return resultJson.getAccess_token();
     }
-    String listAccounts(String access_token) throws IOException {
+    Response listAccounts(String access_token) throws IOException {
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
                 .addHeader("Authorization", "Bearer "+ access_token)
@@ -107,6 +107,6 @@ class AccountsApis {
                 .get()
                 .build();
         Response response = okHttpClient.newCall(request).execute();
-        return response.body().string();
+        return response;
     }
 }
