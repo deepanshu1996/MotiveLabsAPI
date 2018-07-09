@@ -1,3 +1,5 @@
+package pennybank.tset;
+
 public class AccessTokenResultJson {
     private String access_token;
 

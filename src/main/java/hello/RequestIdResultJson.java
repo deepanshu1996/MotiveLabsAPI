@@ -1,3 +1,5 @@
+package pennybank.tset;
+
 public class RequestIdResultJson {
     private Data Data;
 

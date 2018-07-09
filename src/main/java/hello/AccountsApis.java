@@ -1,12 +1,11 @@
+package pennybank.tset;
+
 import com.google.gson.Gson;
 import com.squareup.okhttp.*;
 
-import java.awt.*;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
-public class Main {
+class AccountsApis {
 
     private final String REDIRECT_URI = "http%3A%2F%2Flocalhost%3A8080";
     private final String CLIENT_ID = "tTKoOUTwq5WOUQBhoheayGbwtkR7uEHA";
@@ -14,7 +13,7 @@ public class Main {
     private final String BASE_URL = "https://api.pennybank.motivelabs.io/cma9-account-api/open-banking/v1.1";
     private final String CONSENT_URL = "https://api.pennybank.motivelabs.io/consent/v1.0/cma9-account";
 
-    public String getAccessToken() throws IOException {
+    String getAccessToken() throws IOException {
         OkHttpClient client = new OkHttpClient();
         RequestBody body = new FormEncodingBuilder().add("grant_type", "client_credentials")
                 .add("client_id", CLIENT_ID)
@@ -29,9 +28,9 @@ public class Main {
         AccessTokenResultJson resultJson = gson.fromJson(result, AccessTokenResultJson.class);
         return resultJson.getAccess_token();
     }
-    public String postAccountRequest(String access_token) throws IOException {
+    String postAccountRequest(String access_token) throws IOException {
         OkHttpClient client = new OkHttpClient();
-        String bodyString = new String();
+        String bodyString;
         bodyString = "{\n" +
                 "  \"Data\": {\n" +
                 "    \"Permissions\": [\n" +
@@ -64,7 +63,7 @@ public class Main {
         RequestIdResultJson resultJson = gson.fromJson(result, RequestIdResultJson.class);
         return resultJson.getData().getAccountRequestId();
     }
-    public String redirectUserToConsentAuth (String request_id) throws IOException {
+    String redirectUserToConsentAuth(String request_id) throws IOException {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(CONSENT_URL+"/authorize?" +
@@ -79,16 +78,35 @@ public class Main {
         Response response = client.newCall(request).execute();
         return response.request().url().toString();
     }
-    public static void main(String[] Args) throws IOException, URISyntaxException {
-        Main main = new Main();
-        String access_token = main.getAccessToken();
-        //System.out.println(access_token);
-        String request_id = main.postAccountRequest(access_token);
-        //System.out.println(request_id);
-        String url = main.redirectUserToConsentAuth(request_id);
-        //System.out.println(url);
-        Desktop.getDesktop().browse(new URI(url));
-
+    String exchangeCodeForAccessToken(String code) throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        RequestBody body = new FormEncodingBuilder()
+                .add("client_id", CLIENT_ID)
+                .add("client_secret", CLIENT_SECRET)
+                //.add("redirect_uri",REDIRECT_URI)
+                .add("grant_type","authorization_code")
+                .add("code",code)
+                .build();
+        //"http://localhost:8080/authorize"
+        Request request = new Request.Builder().addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .url(BASE_URL+"/oauth2/token")
+                .post(body)
+                .build();
+        Response response = client.newCall(request).execute();
+        String result = response.body().string();
+        Gson gson = new Gson();
+        AccessTokenResultJson resultJson = gson.fromJson(result, AccessTokenResultJson.class);
+        return resultJson.getAccess_token();
     }
-
+    String listAccounts(String access_token) throws IOException {
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request.Builder()
+                .addHeader("Authorization", "Bearer "+ access_token)
+                .addHeader("x-fapi-financial-id", "TBD")
+                .url(BASE_URL+"/accounts")
+                .get()
+                .build();
+        Response response = okHttpClient.newCall(request).execute();
+        return response.body().string();
+    }
 }
