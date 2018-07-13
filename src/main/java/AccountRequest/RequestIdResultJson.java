@@ -1,7 +1,7 @@
-package hello;
+package AccountRequest;
 
 public class RequestIdResultJson {
-    private Data Data;
+    private AccountRequest.Data Data;
 
     public RequestIdResultJson(Data data) {
         Data = data;

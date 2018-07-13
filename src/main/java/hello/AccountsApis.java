@@ -1,13 +1,19 @@
 package hello;
 
+import AccountRequest.RequestIdResultJson;
+import BalanceRequest.Amount;
+import BalanceRequest.GetBalanceWithAccountIdJsonResult;
+import ListAccounts.Account;
+import ListAccounts.ListAccountsJsonResult;
 import com.google.gson.Gson;
 import com.squareup.okhttp.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 class AccountsApis {
 
-    private final String REDIRECT_URI = "http%3A%2F%2Flocalhost%3A8080%2Fauthorize";
+    private final String REDIRECT_URI = "http%3A%2F%2Flocalhost%3A4200%2Flist-accounts";
     private final String CLIENT_ID = "OhaxaWe6XWkpF9774Y4wM1X5LkdBPdJl";
     private final String CLIENT_SECRET = "kwCN6IxBoeG0N8A2xphsRqNqg6CwOVwv";
     private final String BASE_URL = "https://api.pennybank.motivelabs.io/cma9-account-api/open-banking/v1.1";
@@ -83,7 +89,7 @@ class AccountsApis {
         RequestBody body = new FormEncodingBuilder()
                 .add("client_id", CLIENT_ID)
                 .add("client_secret", CLIENT_SECRET)
-                //.add("redirect_uri",REDIRECT_URI)
+                //.add("redirect_uri","http://localhost:4200/callback")
                 .add("grant_type","authorization_code")
                 .add("code",code)
                 .build();
@@ -98,7 +104,7 @@ class AccountsApis {
         AccessTokenResultJson resultJson = gson.fromJson(result, AccessTokenResultJson.class);
         return resultJson.getAccess_token();
     }
-    Response listAccounts(String access_token) throws IOException {
+    ArrayList<Account> listAccounts(String access_token) throws IOException {
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder()
                 .addHeader("Authorization", "Bearer "+ access_token)
@@ -107,6 +113,24 @@ class AccountsApis {
                 .get()
                 .build();
         Response response = okHttpClient.newCall(request).execute();
-        return response;
+        String result = response.body().string();
+        Gson gson = new Gson();
+        ListAccountsJsonResult listAccountsJsonResult = gson.fromJson(result, ListAccountsJsonResult.class);
+        ArrayList<Account> accounts = listAccountsJsonResult.getData().getAccount();
+        return accounts;
+    }
+    Amount getBalance (String access_token, String accountId) throws IOException {
+        OkHttpClient okHttpClient = new OkHttpClient();
+        Request request = new Request.Builder()
+                .addHeader("Authorization", "Bearer "+ access_token)
+                .addHeader("x-fapi-financial-id", "TBD")
+                .url(BASE_URL+"/accounts/"+accountId+"/balances")
+                .get()
+                .build();
+        Response response = okHttpClient.newCall(request).execute();
+        String result = response.body().string();
+        Gson gson = new Gson();
+        Amount amount = gson.fromJson(result,GetBalanceWithAccountIdJsonResult.class).getData().getBalance().get(0).getAmount();
+        return amount;
     }
 }
